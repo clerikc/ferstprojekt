@@ -1,0 +1,48 @@
+pipeline {
+    agent any
+
+    environment {
+        GO_PROJECT = 'hello-server'  // Имя бинарника
+        GO_SRC = 'main.go'          // Исходный файл
+    }
+
+    stages {
+        stage('Checkout') {
+            steps {
+                git branch: 'main', 
+                     url: 'https://github.com/ваш-репозиторий.git'  // Укажите ваш репозиторий
+            }
+        }
+
+        stage('Setup Go') {
+            steps {
+                sh '''
+                    sudo apt-get update -y
+                    sudo apt-get install -y golang-go
+                '''
+            }
+        }
+
+        stage('Build') {
+            steps {
+                sh '''
+                    go mod init ${GO_PROJECT}  # Если нет go.mod
+                    go build -o ${GO_PROJECT} ${GO_SRC}
+                '''
+            }
+        }
+
+        stage('Archive Artifact') {
+            steps {
+                archiveArtifacts artifacts: '${GO_PROJECT}', 
+                                onlyIfSuccessful: true
+            }
+        }
+    }
+
+    post {
+        always {
+            cleanWs()  // Очистка рабочей директории
+        }
+    }
+}
