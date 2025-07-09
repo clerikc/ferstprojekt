@@ -4,9 +4,7 @@ WORKDIR /app
 
 COPY . .
 
-RUN go mod init hello-world && \
-    go mod tidy && \
-    CGO_ENABLED=0 GOOS=linux go build -o /hello-world
+RUN CGO_ENABLED=0 GOOS=linux go build -o /hello-world
 
 FROM alpine:latest
 COPY --from=builder /hello-world /hello-world
