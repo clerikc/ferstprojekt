@@ -24,8 +24,8 @@ pipeline {
                     docker.build("${DOCKER_IMAGE}:${DOCKER_TAG}", "--file my-go-app/Dockerfile .")
                     
                     // Останавливаем и удаляем старый контейнер
-                    sh 'docker stop hello-container || true'
-                    sh 'docker rm hello-container || true'
+                   // sh 'docker stop hello-container || true'
+                    //sh 'docker rm hello-container || true'
                     
                     // Запускаем новый контейнер
                     docker.run(
