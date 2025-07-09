@@ -17,8 +17,8 @@ pipeline {
         stage('Build and Run Docker') {
             steps {
                 script {
-                    sh 'go mod init hello-world || true'
-                sh 'go mod tidy'
+                    sh 'cd my-go-app & go mod init hello-world || true'
+                sh 'cd my-go-app & go mod tidy'
                 
                     // Собираем образ
                     docker.build("${DOCKER_IMAGE}:${DOCKER_TAG}", "--file my-go-app/Dockerfile .")
