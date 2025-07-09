@@ -1,10 +1,46 @@
 pipeline {
     agent any
+
+    environment {
+        DOCKER_IMAGE = "go-hello-world"
+        DOCKER_TAG = "latest"
+    }
+
     stages {
-        stage('Build') {
+        stage('Checkout') {
             steps {
-                sh 'go build -o hello-server main.go'
+                git branch: 'main', 
+                     url: 'https://github.com/clerikc/ferstprojekt.git'
             }
+        }
+
+        stage('Build and Run Docker') {
+            steps {
+                script {
+                    // Собираем образ
+                    docker.build("${DOCKER_IMAGE}:${DOCKER_TAG}", "--file my-go-app/Dockerfile .")
+                    
+                    // Останавливаем и удаляем старый контейнер
+                    sh 'docker stop hello-container || true'
+                    sh 'docker rm hello-container || true'
+                    
+                    // Запускаем новый контейнер
+                    docker.run(
+                        "${DOCKER_IMAGE}:${DOCKER_TAG}",
+                        "--name hello-container -p 9090:9090 -d"
+                    )
+                }
+            }
+        }
+    }
+
+    post {
+        always {
+            echo 'Cleaning up...'
+        }
+        success {
+            echo 'Docker container is running!'
+            echo "Access at: http://${env.DOCKER_HOST ?: 'localhost'}:9090"
         }
     }
 }
