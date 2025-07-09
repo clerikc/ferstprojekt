@@ -1,6 +1,6 @@
 pipeline {
     agent any
-
+    
     environment {
         DOCKER_IMAGE = "go-hello-world"
         DOCKER_TAG = "latest"
@@ -9,29 +9,38 @@ pipeline {
     stages {
         stage('Checkout') {
             steps {
-                git branch: 'main', 
-                     url: 'https://github.com/clerikc/ferstprojekt.git'
+                git branch: 'main', url: 'https://github.com/clerikc/ferstprojekt.git'
             }
         }
 
-        stage('Build and Run Docker') {
+        stage('Build Docker Image') {
+            steps {
+                dir('my-go-app') {
+                    script {
+                        // Создаем go.mod если его нет
+                        sh '''
+                            if [ ! -f go.mod ]; then
+                                go mod init hello-world
+                            fi
+                            go mod tidy
+                        '''
+                        
+                        // Сборка образа с использованием Docker Pipeline
+                        docker.build("${DOCKER_IMAGE}:${DOCKER_TAG}")
+                    }
+                }
+            }
+        }
+
+        stage('Run Container') {
             steps {
                 script {
-                    sh 'cd my-go-app & go mod init hello-world || true'
-                sh 'cd my-go-app & go mod tidy'
-                
-                    // Собираем образ
-                    docker.build("${DOCKER_IMAGE}:${DOCKER_TAG}", "--file my-go-app/Dockerfile .")
-                    
                     // Останавливаем и удаляем старый контейнер
-                   // sh 'docker stop hello-container || true'
-                    //sh 'docker rm hello-container || true'
+                  //  sh 'docker stop hello-container || true'
+                   // sh 'docker rm hello-container || true'
                     
-                    // Запускаем новый контейнер
-                    docker.run(
-                        "${DOCKER_IMAGE}:${DOCKER_TAG}",
-                        "--name hello-container -p 9090:9090 -d"
-                    )
+                    // Запускаем контейнер через shell-команду
+                    sh "docker run --name hello-container -p 9090:9090 -d ${DOCKER_IMAGE}:${DOCKER_TAG}"
                 }
             }
         }
@@ -42,8 +51,7 @@ pipeline {
             echo 'Cleaning up...'
         }
         success {
-            echo 'Docker container is running!'
-            echo "Access at: http://${env.DOCKER_HOST ?: 'localhost'}:9090"
+            echo 'Application is running at: http://localhost:9090'
         }
     }
 }
