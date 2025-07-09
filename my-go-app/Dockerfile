@@ -7,7 +7,7 @@ WORKDIR /app
 COPY . .
 
 # Собираем приложение с подробным выводом
-RUN cd my-go-app & go build main.go
+RUN go build my-go-app/main.go
 
 # Этап запуска
 FROM alpine:latest
