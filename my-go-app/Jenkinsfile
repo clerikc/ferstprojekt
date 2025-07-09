@@ -4,6 +4,7 @@ pipeline {
     environment {
         DOCKER_IMAGE = "go-hello-world"
         DOCKER_TAG = "latest"
+        CONTAINER_NAME = "hello-container"
     }
 
     stages {
@@ -26,7 +27,13 @@ pipeline {
                     // Останавливаем и удаляем старый контейнер
                    // sh 'docker stop hello-container || true'
                     //sh 'docker rm hello-container || true'
-                    
+                    sh """
+                        if docker container inspect ${CONTAINER_NAME} >/dev/null 2>&1; then
+                            echo "Removing existing container..."
+                            docker stop ${CONTAINER_NAME} || true
+                            docker rm ${CONTAINER_NAME} || true
+                        fi
+                    """
                     // Запускаем новый контейнер
                 sh "docker run --name hello-container -p 9090:9090 -d ${DOCKER_IMAGE}:${DOCKER_TAG}"
                 }
